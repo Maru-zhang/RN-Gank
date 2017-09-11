@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { ActivityIndicator, NavigatorIOS, FlatList, Text, View, StyleSheet, Alert } from 'react-native';
-import WebViewActivity from './Web.js'
+import HomeCell from './HomeCell.js'
 
 export default class NavigatorIOSApp extends Component {
   render() {
@@ -35,17 +35,10 @@ class HomeActivity extends Component {
         console.log(error)
       });
   }
-  _onForward = (item) => {
-    this.props.navigator.push({
-      title: 'Scene ',
-      component: WebViewActivity,
-      passProps: {"url": item.url}
-    });
-  }
   render() {
       if (this.state.isLoading) {
         return (
-          <View style={{flex: 1, paddingTop: 100}}>
+          <View style={{flex: 1, justifyContent: 'center'}}>
             <ActivityIndicator />
           </View>
         );
@@ -54,7 +47,7 @@ class HomeActivity extends Component {
         <View style={styles.container}>
           <FlatList
             data={this.state.dataSource}
-            renderItem={({item}) => <Text onPress={this._onForward} style={styles.item}>{item.desc}</Text>}
+            renderItem={({item}) => <HomeCell navigator={this.props.navigator} item={item}  style={styles.item}></HomeCell>}
           />
         </View>
       );
@@ -65,10 +58,5 @@ const styles = StyleSheet.create({
   container: {
    flex: 1,
    paddingTop: 64
-  },
-  item: {
-    height: 100,
-    padding: 10,
-    fontSize: 18
-  },
+  }
 })
