@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { ActivityIndicator, NavigatorIOS, FlatList, Text, View, StyleSheet, Alert } from 'react-native';
+import { ActivityIndicator, RefreshControl, NavigatorIOS, FlatList, Text, View, StyleSheet, Alert } from 'react-native';
 import HomeCell from './HomeCell.js'
 
 export default class NavigatorIOSApp extends Component {
@@ -17,7 +17,8 @@ class HomeActivity extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      isLoading: true
+      isLoading: false,
+      refreshing: false
     }
   }
   componentDidMount() {
@@ -30,10 +31,20 @@ class HomeActivity extends Component {
         }, function() {
 
         });
-      })
-      .catch((error) => {
-        console.log(error)
       });
+  }
+  _onRefresh() {
+    this.setState({refreshing: true});
+    fetch('http://gank.io/api/data/all/20/0')
+    .then((response) => response.json())
+    .then((responseJson) => {
+      this.setState({
+        refreshing: false,
+        dataSource: responseJson.results
+      }, function() {
+
+      });
+    });
   }
   render() {
       if (this.state.isLoading) {
@@ -47,7 +58,9 @@ class HomeActivity extends Component {
         <View style={styles.container}>
           <FlatList
             data={this.state.dataSource}
-            renderItem={({item}) => <HomeCell navigator={this.props.navigator} item={item}  style={styles.item}></HomeCell>}
+            renderItem={({item}) => <HomeCell navigator={this.props.navigator} item={item}  style={styles.item}></HomeCell>} 
+            refreshControl={<RefreshControl refreshing={this.state.refreshing} onRefresh={this._onRefresh.bind(this)}/>}
+            keyExtractor={(item, index) => index}
           />
         </View>
       );
@@ -57,6 +70,6 @@ class HomeActivity extends Component {
 const styles = StyleSheet.create({
   container: {
    flex: 1,
-   paddingTop: 64
+   paddingTop: 0
   }
 })
