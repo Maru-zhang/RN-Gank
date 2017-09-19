@@ -18,18 +18,19 @@ class HomeActivity extends Component {
     super(props);
     this.state = {
       isLoading: false,
-      refreshing: false
+      refreshing: false,
+      pageIndex: 0,
+      moreLoading: false
     }
   }
   componentDidMount() {
+    this.setState({pageIndex: 0});
     return fetch('http://gank.io/api/data/all/20/0')
       .then((response) => response.json())
       .then((responseJson) => {
         this.setState({
           isLoading: false,
           dataSource: responseJson.results
-        }, function() {
-
         });
       });
   }
@@ -46,6 +47,27 @@ class HomeActivity extends Component {
       });
     });
   }
+
+  _onLoadMore() {
+    this.setState({
+      moreLoading: true,
+      pageIndex: this.state.pageIndex + 1
+    });
+    console.log('dsadsadsa');
+    fetch('http://gank.io/api/data/all/20/'+this.state.pageIndex)
+    .then((response) => response.json())
+    .then((responseJson) => {
+      this.setState({
+        moreLoading: false
+      });
+      this.setState({
+        dataSource: this.state.dataSource.concat(responseJson.results)
+      }, function() {
+
+      });
+    });
+  }
+
   render() {
       if (this.state.isLoading) {
         return (
@@ -54,16 +76,33 @@ class HomeActivity extends Component {
           </View>
         );
       }
-      return (
-        <View style={styles.container}>
-          <FlatList
-            data={this.state.dataSource}
-            renderItem={({item}) => <HomeCell navigator={this.props.navigator} item={item}  style={styles.item}></HomeCell>} 
-            refreshControl={<RefreshControl refreshing={this.state.refreshing} onRefresh={this._onRefresh.bind(this)}/>}
-            keyExtractor={(item, index) => index}
-          />
-        </View>
-      );
+      if (this.state.moreLoading) {
+        return (
+          <View style={styles.container}>
+            <FlatList
+              data={this.state.dataSource}
+              renderItem={({item}) => <HomeCell navigator={this.props.navigator} item={item}  style={styles.item}></HomeCell>} 
+              refreshControl={<RefreshControl refreshing={this.state.refreshing} onRefresh={this._onRefresh.bind(this)}/>}
+              keyExtractor={(item, index) => index}
+              onEndReached={this._onLoadMore.bind(this)}
+            />
+            <Text style={styles.footer}>正在努力为你加载...</Text>
+          </View>
+        );
+      } else {
+        return (
+          <View style={styles.container}>
+            <FlatList
+              data={this.state.dataSource}
+              renderItem={({item}) => <HomeCell navigator={this.props.navigator} item={item}  style={styles.item}></HomeCell>} 
+              refreshControl={<RefreshControl refreshing={this.state.refreshing} onRefresh={this._onRefresh.bind(this)}/>}
+              keyExtractor={(item, index) => index}
+              onEndReached={this._onLoadMore.bind(this)}
+            />
+          </View>
+        );
+      }
+
   }
 }
 
@@ -71,5 +110,9 @@ const styles = StyleSheet.create({
   container: {
    flex: 1,
    paddingTop: 0
+  },
+  footer: {
+    textAlign: 'center',
+    backgroundColor: 'transparent'
   }
 })
