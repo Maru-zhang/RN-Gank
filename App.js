@@ -1,13 +1,25 @@
 import React, { Component } from 'react';
-import { ActivityIndicator, RefreshControl, NavigatorIOS, FlatList, Text, View, StyleSheet, Alert } from 'react-native';
-import HomeCell from './HomeCell.js'
+import { SegmentedControlIOS, ActivityIndicator, RefreshControl, NavigatorIOS, FlatList, Text, View, StyleSheet, Alert } from 'react-native';
+import HomeCell from './src/pages/HomeCell.js'
+import PlaygroundView from './src/pages/playground.js'
 
 export default class NavigatorIOSApp extends Component {
+
+  _onRightNavigationItemClick() {
+    this.refs.nav.push({
+      title: "Mr",
+      component: PlaygroundView      
+    }); 
+  }
+
   render() {
     return <NavigatorIOS
+      ref='nav'
       initialRoute = {{
         component: HomeActivity,
         title: "RN-Gank",
+        rightButtonTitle: "test",
+        onRightButtonPress: () => this._onRightNavigationItemClick(),
       }}
       style={{flex: 1}}/>
   }
@@ -25,14 +37,7 @@ class HomeActivity extends Component {
   }
   componentDidMount() {
     this.setState({pageIndex: 0});
-    return fetch('http://gank.io/api/data/all/20/0')
-      .then((response) => response.json())
-      .then((responseJson) => {
-        this.setState({
-          isLoading: false,
-          dataSource: responseJson.results
-        });
-      });
+    this._onRefresh();
   }
   _onRefresh() {
     this.setState({refreshing: true});
@@ -53,7 +58,6 @@ class HomeActivity extends Component {
       moreLoading: true,
       pageIndex: this.state.pageIndex + 1
     });
-    console.log('dsadsadsa');
     fetch('http://gank.io/api/data/all/20/'+this.state.pageIndex)
     .then((response) => response.json())
     .then((responseJson) => {
@@ -61,9 +65,8 @@ class HomeActivity extends Component {
         moreLoading: false
       });
       this.setState({
+        moreLoading: false,
         dataSource: this.state.dataSource.concat(responseJson.results)
-      }, function() {
-
       });
     });
   }
@@ -76,33 +79,19 @@ class HomeActivity extends Component {
           </View>
         );
       }
-      if (this.state.moreLoading) {
-        return (
-          <View style={styles.container}>
-            <FlatList
-              data={this.state.dataSource}
-              renderItem={({item}) => <HomeCell navigator={this.props.navigator} item={item}  style={styles.item}></HomeCell>} 
-              refreshControl={<RefreshControl refreshing={this.state.refreshing} onRefresh={this._onRefresh.bind(this)}/>}
-              keyExtractor={(item, index) => index}
-              onEndReached={this._onLoadMore.bind(this)}
-            />
-            <Text style={styles.footer}>正在努力为你加载...</Text>
-          </View>
-        );
-      } else {
-        return (
-          <View style={styles.container}>
-            <FlatList
-              data={this.state.dataSource}
-              renderItem={({item}) => <HomeCell navigator={this.props.navigator} item={item}  style={styles.item}></HomeCell>} 
-              refreshControl={<RefreshControl refreshing={this.state.refreshing} onRefresh={this._onRefresh.bind(this)}/>}
-              keyExtractor={(item, index) => index}
-              onEndReached={this._onLoadMore.bind(this)}
-            />
-          </View>
-        );
-      }
-
+      return (
+        <View style={styles.container}>
+        <SegmentedControlIOS values={['One', 'Two', 'Three', 'Four', 'Five']} selectedIndex={0} />
+        <FlatList
+            data={this.state.dataSource}
+            renderItem={({item}) => <HomeCell navigator={this.props.navigator} item={item}  style={styles.item}></HomeCell>} 
+            refreshControl={<RefreshControl refreshing={this.state.refreshing} onRefresh={this._onRefresh.bind(this)}/>}
+            keyExtractor={(item, index) => index}
+            onEndReached={this._onLoadMore.bind(this)}
+          />
+          {this.state.moreLoading && (<Text style={styles.footer}>正在努力为你加载...</Text>)}
+        </View>
+      );
   }
 }
 
